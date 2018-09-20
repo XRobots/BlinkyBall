@@ -163,32 +163,9 @@ int but2;
 int mode = 0;
 int modeFlag = 0;
 
-int      head0  = 0, tail0 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color0 = 0xFF0000;      // 'On' color (starts red)
-
-int      head1  = 0, tail1 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color1 = 0xFF0000;      // 'On' color (starts red)
-
-int      head2  = 0, tail2 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color2 = 0xFF0000;      // 'On' color (starts red)
-
-int      head3  = 0, tail3 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color3 = 0xFF0000;      // 'On' color (starts red)
-
-int      head4  = 0, tail4 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color4 = 0xFF0000;      // 'On' color (starts red)
-
-int      head5  = 0, tail5 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color5 = 0xFF0000;      // 'On' color (starts red)
-
-int      head6  = 0, tail6 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color6 = 0xFF0000;      // 'On' color (starts red)
-
-int      head7  = 0, tail7 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color7 = 0xFF0000;      // 'On' color (starts red)
-
-int      head8  = 0, tail8 = -8; // Index of first 'on' and 'off' pixels
-uint32_t color8 = 0xFF0000;      // 'On' color (starts red)
+int head[9] = { 0 };  // Index of first 'on' and 'off' pixels
+int tail[9] = { -8, -8, -8, -8, -8, -8, -8, -8 };
+uint32_t color[9] = { 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000, 0xFF0000 };      // 'On' color (starts red)
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
@@ -203,7 +180,6 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
 
-
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
@@ -212,7 +188,6 @@ volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin h
 void dmpDataReady() {
     mpuInterrupt = true;
 }
-
 
 
 // ================================================================
@@ -414,134 +389,135 @@ void loop() {
         //************** do basic strip test / mode 0 **********************
 
         if (mode == 0) {          
-            strip.setPixelColor(head0, color0); // 'On' pixel at head
-            strip.setPixelColor(tail0, 0);     // 'Off' pixel at tail
+            strip.setPixelColor(head[0], color[0]); // 'On' pixel at head
+            strip.setPixelColor(tail[0], 0);     // 'Off' pixel at tail
             strip.show();                     // Refresh strip
             //delay(20);                        // Pause 20 milliseconds (~50 FPS)
           
-            if(++head0 >= NUMPIXELS) {         // Increment head index.  Off end of strip?
-              head0 = 0;                       //  Yes, reset head index to start
-              if((color0 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-                color0 = 0xFF0000;             //   Yes, reset to red
+            if(++head[0] >= NUMPIXELS) {         // Increment head index.  Off end of strip?
+              head[0] = 0;                       //  Yes, reset head index to start
+              if((color[0] >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
+                color[0] = 0xFF0000;             //   Yes, reset to red
             }
-            if(++tail0 >= NUMPIXELS) tail0 = 0; // Increment, reset tail index
+            if(++tail[0] >= NUMPIXELS) tail[0] = 0; // Increment, reset tail index
         }    
 
         //************** do basic strip test 1 / mode 1 **********************
 
         if (mode == 1) {
-            strip1(mode);
-            strip2(mode);
-            strip3(mode);
-            strip4(mode);
-            strip5(mode);
-            strip6(mode);
-            strip7(mode);
-            strip8(mode);
+            light_strip(1, mode);
+            light_strip(2, mode);
+            light_strip(3, mode);
+            light_strip(4, mode);
+            light_strip(5, mode);
+            light_strip(6, mode);
+            light_strip(7, mode);
+            light_strip(8, mode);
         }
 
         else if (mode == 2) {
 
             //********* positive yaw ******
-            if (yaw <10 && yaw > -10) {
-              setall(0,104,0x000000);     // turn all off
-            }          
-            else if (yaw > 10 && yaw < 30){
-                setall(0,13,0x0000FF);    
-                setall(13,26,0x000000);      
+            if (yaw >= -10) {
+                if (yaw < 10) {
+                  setall(0, 104, 0x000000);     // turn all off
+                }          
+                else if (yaw < 30){
+                    setall(0, 13, 0x0000FF);    
+                    setall(13, 26, 0x000000);      
+                }
+                else if (yaw < 40) { 
+                    setall(13, 26, 0x0000FF); 
+                    setall(26, 39, 0x000000);
+                }
+                else if (yaw < 60) { 
+                    setall(26, 39, 0x0000FF); 
+                    setall(39, 52, 0x000000); 
+                }
+                else if (yaw < 70) { 
+                    setall(39, 52, 0x0000FF);
+                    setall(52, 65, 0x000000);  
+                }
+                else if (yaw < 80) { 
+                    setall(52, 65, 0x0000FF);
+                    setall(65, 78, 0x000000);
+                } 
+                else if (yaw < 90) { 
+                    setall(65, 78, 0x0000FF);
+                    setall(78, 91, 0x000000);
+                } 
+                else if (yaw < 100) { 
+                    setall(78, 91, 0x0000FF);
+                    setall(91, 104, 0x000000);
+                } 
+                else if (yaw >= 100) { 
+                    setall(91, 104, 0x0000FF);
+                } 
             }
-            else if (yaw > 30 && yaw < 40) { 
-                setall(13,26,0x0000FF); 
-                setall(26,39,0x000000);
-            }
-            else if (yaw > 40 && yaw < 60) { 
-                setall(26,39,0x0000FF); 
-                setall(39,52,0x000000); 
-            }
-            else if (yaw > 60 && yaw < 70) { 
-                setall(39,52,0x0000FF);
-                setall(52,65,0x000000);  
-            }
-            else if (yaw > 70 && yaw < 80) { 
-                setall(52,65,0x0000FF);
-                setall(65,78,0x000000);
-            } 
-            else if (yaw > 80 && yaw < 90) { 
-                setall(65,78,0x0000FF);
-                setall(78,91,0x000000);
-            } 
-            else if (yaw > 90 && yaw < 100) { 
-                setall(78,91,0x0000FF);
-                setall(91,104,0x000000);
-            } 
-            else if (yaw > 100) { 
-                setall(91,104,0x0000FF);
-            } 
-            
-            //********** negative yaw ******
-            
-          
-            else if (yaw < -10 && yaw > -30){
-                setall(91,104,0xFF0000);    
-                setall(78,91,0x000000);      
-            }
-            else if (yaw < -30 && yaw > -40) { 
-                setall(78,91,0xFF0000); 
-                setall(65,78,0x000000);
-            }
-            else if (yaw < -40 && yaw > -60) { 
-                setall(65,78,0xFF0000); 
-                setall(52,65,0x000000); 
-            }
-            else if (yaw < -60 && yaw > -70) { 
-                setall(52,65,0xFF0000);
-                setall(39,52,0x000000);  
-            }
-            else if (yaw < -70 && yaw > -80) { 
-                setall(39,52,0xFF0000);
-                setall(26,39,0x000000);
-            } 
-            else if (yaw < -80 && yaw > -90) { 
-                setall(26,39,0xFF0000);
-                setall(13,26,0x000000);
-            } 
-            else if (yaw < -90 && yaw > -100) { 
-                setall(13,26,0xFF0000);
-                setall(0,13,0x000000);
-            } 
-            else if (yaw < -100) { 
-                setall(0,13,0xFF0000);
+            else {
+                //********** negative yaw ******
+                if (yaw > -30){
+                    setall(91, 104, 0xFF0000);    
+                    setall(78, 91, 0x000000);      
+                }
+                else if (yaw > -40) { 
+                    setall(78, 91, 0xFF0000); 
+                    setall(65, 78, 0x000000);
+                }
+                else if (yaw > -60) { 
+                    setall(65, 78, 0xFF0000); 
+                    setall(52, 65, 0x000000); 
+                }
+                else if (yaw > -70) { 
+                    setall(52, 65, 0xFF0000);
+                    setall(39, 52, 0x000000);  
+                }
+                else if (yaw > -80) { 
+                    setall(39, 52, 0xFF0000);
+                    setall(26, 39, 0x000000);
+                } 
+                else if (yaw > -90) { 
+                    setall(26, 39, 0xFF0000);
+                    setall(13, 26, 0x000000);
+                } 
+                else if (yaw > -100) { 
+                    setall(13, 26, 0xFF0000);
+                    setall(0, 13, 0x000000);
+                } 
+                else if (yaw <= -100) { 
+                    setall(0, 13, 0xFF0000);
+                }
             }
             
             strip.show();             
         }
 
         if (mode == 3) {
-            setall(0,104, 0x000000);    // set all off before slecting which should be on
+            setall(0, 104, 0x000000);    // set all off before slecting which should be on
            
-            if (pitch > 5 && roll > 5) {
-              setall(26,39, 0x00FF00);
+            if (pitch >= 5 && roll >= 5) {
+              setall(26, 39, 0x00FF00);
             }
             else if (pitch < -5 && roll < -5) {
-              setall(78,91, 0x00FF00);
+              setall(78, 91, 0x00FF00);
             }
-            else if (pitch > 5 && roll < -5){
-              setall(0,13, 0x00FF00);
+            else if (pitch >= 5 && roll < -5){
+              setall(0, 13, 0x00FF00);
             }
-            else if (pitch < -5 && roll > 5) {
-              setall(52,65, 0x00FF00);
+            else if (pitch < -5 && roll >= 5) {
+              setall(52, 65, 0x00FF00);
             }
-            else if (roll > 5) {
-              setall(39,52, 0x00FF00);
+            else if (roll >= 5) {
+              setall(39, 52, 0x00FF00);
             }
             else if (roll < -5) {
-              setall(91,104, 0x00FF00);
+              setall(91, 104, 0x00FF00);
             }
             else if (pitch < -5) {
-              setall(65,78, 0x00FF00);
+              setall(65, 78, 0x00FF00);
             }
-            else if (pitch > 5){
-              setall(13,26, 0x00FF00);
+            else if (pitch >= 5){
+              setall(13, 26, 0x00FF00);
             }
             strip.show();    
         }
@@ -549,21 +525,20 @@ void loop() {
         if (mode == 4) {
             setall(0,104, 0x000000);    // set all off before slecting which should be on
 
-            setall((52-roll2), 52, 0xFF0000);
-            setall((91+roll2), 104, 0xFF0000);   
-            setall((26-pitch2), 26, 0xFF0000);     
-            setall((65+pitch2), 78, 0xFF0000);
+            setall((52 - roll2), 52, 0xFF0000);
+            setall((91 + roll2), 104, 0xFF0000);   
+            setall((26 - pitch2), 26, 0xFF0000);     
+            setall((65 + pitch2), 78, 0xFF0000);
 
-            setall((39-((roll2+pitch2)/2)), 39, 0xFF0000);
-            setall((78+((roll2+pitch2)/2)), 91, 0xFF0000);
+            setall((39 - ((roll2 + pitch2)/2)), 39, 0xFF0000);
+            setall((78 + ((roll2 + pitch2)/2)), 91, 0xFF0000);
 
-            setall((13-((roll3+pitch2)/2)), 13, 0xFF0000);
-            setall((52+((roll3+pitch2)/2)), 65, 0xFF0000);
+            setall((13 - ((roll3 + pitch2)/2)), 13, 0xFF0000);
+            setall((52 + ((roll3 + pitch2)/2)), 65, 0xFF0000);
             
             strip.show(); 
         }
 
-          
         // blink LED to indicate activity
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
@@ -573,147 +548,28 @@ void loop() {
 //******* set all LEDs ***********
 
 void setall(int start, int finish, uint32_t color) {
-      for (int i = start; i < finish; i = i + 1){
+    for (int i = start; i < finish; i++) {
         strip.setPixelColor(i, color);
+    }
+}
+
+void light_strip(int no, int mode) {
+
+    int lower = 13 * (no - 1);  // don't know if that var name is great one
+    int upper = 13 * no;
+
+    if (mode == 1) {
+        strip.setPixelColor(head[no], color[no]); // 'On' pixel at head
+        strip.setPixelColor(tail[no], lower);     // 'Off' pixel at tail
+      
+        if (++head[no] >= upper) {         // Increment head index.  Off end of strip?
+            head[no] = 0;                       //  Yes, reset head index to start
+            if ((color[no] >>= 8) == 0) {          //  Next color (R->G->B) ... past blue now?
+                color[no] = 0xFF0000;    //   Yes, reset to red
+            }
         }
-}
-
-void strip1(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head1, color1); // 'On' pixel at head
-    strip.setPixelColor(tail1, 0);     // 'Off' pixel at tail
-  
-    if(++head1 >= 13) {         // Increment head index.  Off end of strip?
-      head1 = 0;                       //  Yes, reset head index to start
-      if((color1 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color1 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail1 >= 13) tail1 = 0; // Increment, reset tail index
-    } // end of mode 1
-
-}
-
-void strip2(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head2, color2); // 'On' pixel at head
-    strip.setPixelColor(tail2, 13);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head2 >= 26) {         // Increment head index.  Off end of strip?
-      head2 = 13;                       //  Yes, reset head index to start
-      if((color2 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color2 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail2 >= 26) tail2 = 13; // Increment, reset tail index
+        if (++tail[no] >= upper) { 
+            tail[no] = 0;  // Increment, reset tail index
+        }
     } // end of mode 1
 }
-
-
-void strip3(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head3, color3); // 'On' pixel at head
-    strip.setPixelColor(tail3, 26);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head3 >= 39) {         // Increment head index.  Off end of strip?
-      head3 = 26;                       //  Yes, reset head index to start
-      if((color3 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color3 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail3 >= 39) tail3 = 26; // Increment, reset tail index
-    } // end of mode 1
-
-}
-
-void strip4(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head4, color4); // 'On' pixel at head
-    strip.setPixelColor(tail4, 39);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head4 >= 52) {         // Increment head index.  Off end of strip?
-      head4 = 39;                       //  Yes, reset head index to start
-      if((color4 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color4 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail4 >= 52) tail4 = 39; // Increment, reset tail index
-    } // end of mode 1
-}
-
-void strip5(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head5, color5); // 'On' pixel at head
-    strip.setPixelColor(tail5, 52);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head5 >= 65) {         // Increment head index.  Off end of strip?
-      head5 = 52;                       //  Yes, reset head index to start
-      if((color5 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color5 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail5 >= 65) tail5 = 52; // Increment, reset tail index
-    } // end of mode 1
-}
-
-void strip6(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head6, color6); // 'On' pixel at head
-    strip.setPixelColor(tail6, 65);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head6 >= 78) {         // Increment head index.  Off end of strip?
-      head6 = 65;                       //  Yes, reset head index to start
-      if((color6 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color6 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail6 >= 78) tail6 = 65; // Increment, reset tail index
-    } // end of mode 1
-}
-
-void strip7(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head7, color7); // 'On' pixel at head
-    strip.setPixelColor(tail7, 78);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head7 >= 91) {         // Increment head index.  Off end of strip?
-      head7 = 78;                       //  Yes, reset head index to start
-      if((color7 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color7 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail7 >= 91) tail7 = 78; // Increment, reset tail index
-    } // end of mode 1
-}
-
-void strip8(int mode) {
-
-    if (mode == 1) {
-        
-    strip.setPixelColor(head8, color8); // 'On' pixel at head
-    strip.setPixelColor(tail8, 91);     // 'Off' pixel at tail
-    strip.show();                     // Refresh strip
-  
-    if(++head8 >= 104) {         // Increment head index.  Off end of strip?
-      head8 = 91;                       //  Yes, reset head index to start
-      if((color8 >>= 8) == 0)          //  Next color (R->G->B) ... past blue now?
-        color8 = 0xFF0000;             //   Yes, reset to red
-    }
-    if(++tail8 >= 104) tail8 = 91; // Increment, reset tail index
-    } // end of mode 1
-}
-
-
